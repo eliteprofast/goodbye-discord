@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gather | A little room for your people</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <section class="auth-screen" id="auth-screen">
+      <div class="auth-card">
+        <div class="brand-mark" aria-hidden="true">g</div>
+        <p class="eyebrow">your little corner</p>
+        <h1>gather<span>.</span></h1>
+        <p class="auth-intro">Make an account, find your people, and keep the good conversations close.</p>
+        <form id="auth-form">
+          <label>Username<input id="auth-username" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_]+" autocomplete="username" placeholder="your_name" /></label>
+          <label>Password<input id="auth-password" required minlength="6" type="password" autocomplete="current-password" placeholder="6+ characters" /></label>
+          <button class="auth-submit" id="auth-submit" type="submit">Create account</button>
+          <button class="auth-switch" id="auth-switch" type="button">Already have an account? Log in</button>
+          <p class="auth-error" id="auth-error" role="alert"></p>
+        </form>
+      </div>
+    </section>
+    <main class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-row">
+          <div class="brand-mark" aria-hidden="true">g</div>
+          <div>
+            <p class="eyebrow">your little corner</p>
+            <h1>gather<span>.</span></h1>
+          </div>
+          <button class="icon-button" title="More options" aria-label="More options">•••</button>
+        </div>
+
+        <div class="profile-card">
+          <div class="avatar avatar-yellow" id="profile-avatar">?</div>
+          <div class="profile-copy">
+            <strong id="profile-name">Loading...</strong>
+            <span><i class="status-dot"></i> Online now</span>
+          </div>
+          <button class="edit-button" id="logout-button" title="Log out" aria-label="Log out">↪</button>
+        </div>
+
+        <div class="section-heading">
+          <span>Find friends</span>
+        </div>
+        <form class="friend-search" id="friend-search-form"><input id="friend-search-input" placeholder="Search username" autocomplete="off" /><button type="submit" title="Search">⌕</button></form>
+        <div class="friend-results" id="friend-results"></div>
+        <div class="section-heading friend-heading"><span>Friend requests</span></div>
+        <div class="friend-results" id="incoming-requests"></div>
+        <div class="section-heading friend-heading"><span>Your friends</span></div>
+        <nav class="friend-list" id="friend-list" aria-label="Your friends"></nav>
+
+        <div class="sidebar-note">
+          <span class="note-spark">✦</span>
+          <p>Good conversations have a way of making ordinary days feel special.</p>
+        </div>
+      </aside>
+
+      <section class="chat-panel">
+        <header class="chat-header">
+          <div>
+            <div class="room-title"><span class="room-icon coral-bg">◈</span><h2 id="chat-title">Choose a friend</h2></div>
+            <p id="chat-subtitle">Add a friend to start a private conversation</p>
+          </div>
+          <div class="header-actions">
+            <button class="header-button" title="Search messages" aria-label="Search messages">⌕</button>
+            <button class="header-button" title="Room details" aria-label="Room details">ⓘ</button>
+          </div>
+        </header>
+
+        <div class="message-area" id="message-area" aria-live="polite">
+          <div class="day-divider"><span>today</span></div>
+          <div class="empty-chat" id="empty-chat">Your private conversations will appear here.</div>
+        </div>
+
+        <form class="composer" id="message-form">
+          <button type="button" class="composer-action" title="Add an attachment" aria-label="Add an attachment">+</button>
+          <input id="message-input" autocomplete="off" placeholder="Choose a friend first..." maxlength="1000" aria-label="Message" disabled />
+          <button class="send-button" type="submit" title="Send message" aria-label="Send message"><span>↗</span></button>
+        </form>
+        <p class="composer-hint">press <kbd>Enter</kbd> to send <span>·</span> be kind</p>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>

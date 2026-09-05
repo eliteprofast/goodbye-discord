@@ -1,0 +1,17 @@
+{
+  "name": "goodbye-discord-chat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A small real-time chat app for friends",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "public": "lt --port 3000"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "localtunnel": "^2.0.2"
+  }
+}
