@@ -21,6 +21,10 @@ const incomingRequests = document.querySelector('#incoming-requests');
 const friendList = document.querySelector('#friend-list');
 const logoutButton = document.querySelector('#logout-button');
 const clearChatButton = document.querySelector('#clear-chat');
+const adminPanelButton = document.querySelector('#admin-panel-button');
+const adminPanel = document.querySelector('#admin-panel');
+const closeAdminPanel = document.querySelector('#close-admin-panel');
+const adminUserList = document.querySelector('#admin-user-list');
 
 const colors = { coral: '#f7ad99', yellow: '#f5c45c', blue: '#acd2e2', mint: '#a8d7c3' };
 let socket;
@@ -98,6 +102,10 @@ function showAuthError(message) {
   authError.textContent = message;
 }
 
+function renderAdminData(users) {
+  adminUserList.innerHTML = users.map((user) => `<div class="admin-user-row"><span class="mini-avatar">${user.username.charAt(0).toUpperCase()}</span><strong>${escapeHtml(user.username)}</strong><span class="admin-role">${user.role}</span></div>`).join('');
+}
+
 function connect() {
   const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
   socket = new WebSocket(`${protocol}://${window.location.host}`);
@@ -124,6 +132,7 @@ function connect() {
       profileName.textContent = currentUser.username;
       profileAvatar.textContent = currentUser.username.charAt(0).toUpperCase();
       authScreen.hidden = true;
+      adminPanelButton.hidden = !['owner', 'admin'].includes(currentUser.role);
     }
     if (payload.type === 'friends') {
       renderFriends(payload);
@@ -145,6 +154,8 @@ function connect() {
     if (payload.type === 'message' && activeFriend && (payload.message.from === activeFriend.id || payload.message.to === activeFriend.id)) addMessage(payload.message);
     if (payload.type === 'chat-cleared' && activeFriend?.id === payload.userId) clearMessages();
     if (payload.type === 'error') showAuthError(payload.message);
+    if (payload.type === 'admin-data') renderAdminData(payload.users);
+    if (payload.type === 'admin-denied') adminPanel.hidden = true;
   });
   socket.addEventListener('close', () => setTimeout(connect, 1500));
 }
@@ -189,6 +200,15 @@ logoutButton.addEventListener('click', () => {
 clearChatButton.addEventListener('click', () => {
   if (!activeFriend || !window.confirm(`Clear your chat with ${activeFriend.username}? This removes it for both of you.`)) return;
   send({ type: 'clear-chat', userId: activeFriend.id });
+});
+
+adminPanelButton.addEventListener('click', () => {
+  adminPanel.hidden = false;
+  send({ type: 'admin-panel' });
+});
+
+closeAdminPanel.addEventListener('click', () => {
+  adminPanel.hidden = true;
 });
 
 const savedUser = sessionStorage.getItem('gather-user');

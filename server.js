@@ -17,6 +17,11 @@ function loadData() {
 
 const data = loadData();
 
+if (data.users.length && !data.users.some((user) => user.role === 'owner')) {
+  data.users[0].role = 'owner';
+  saveData();
+}
+
 function saveData() {
   fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 }
@@ -55,7 +60,11 @@ async function verifyPassword(password, storedHash) {
 }
 
 function publicUser(user) {
-  return { id: user.id, username: user.username, color: user.color };
+  return { id: user.id, username: user.username, color: user.color, role: user.role || 'member' };
+}
+
+function isStaff(user) {
+  return user && (user.role === 'owner' || user.role === 'admin');
 }
 
 function friendshipBetween(firstId, secondId) {
@@ -167,7 +176,7 @@ webSocketServer.on('connection', (socket) => {
         send(socket, { type: 'error', message: 'Username or password is incorrect.' });
         return;
       }
-      const user = existingUser || { id: makeId(), username, password: await hashPassword(password), color: colors[data.users.length % colors.length] };
+      const user = existingUser || { id: makeId(), username, password: await hashPassword(password), color: colors[data.users.length % colors.length], role: data.users.length ? 'member' : 'owner' };
       if (!existingUser) {
         data.users.push(user);
         saveData();
@@ -181,6 +190,19 @@ webSocketServer.on('connection', (socket) => {
     const userId = clients.get(socket);
     if (!userId) {
       send(socket, { type: 'error', message: 'Please log in first.' });
+      return;
+    }
+
+    if (payload.type === 'admin-panel') {
+      const user = data.users.find((candidate) => candidate.id === userId);
+      if (!isStaff(user)) {
+        send(socket, { type: 'admin-denied' });
+        return;
+      }
+      send(socket, {
+        type: 'admin-data',
+        users: data.users.map((candidate) => ({ id: candidate.id, username: candidate.username, role: candidate.role || 'member' }))
+      });
       return;
     }
 

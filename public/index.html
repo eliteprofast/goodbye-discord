@@ -52,12 +52,19 @@
         <div class="friend-results" id="incoming-requests"></div>
         <div class="section-heading friend-heading"><span>Your friends</span></div>
         <nav class="friend-list" id="friend-list" aria-label="Your friends"></nav>
+        <button class="admin-panel-button" id="admin-panel-button" hidden>Owner / Admin</button>
 
         <div class="sidebar-note">
           <span class="note-spark">✦</span>
           <p>Good conversations have a way of making ordinary days feel special.</p>
         </div>
       </aside>
+
+      <section class="admin-panel" id="admin-panel" hidden>
+        <div class="admin-panel-header"><div><p class="eyebrow">restricted area</p><h2>Owner / Admin</h2></div><button class="header-button" id="close-admin-panel" title="Close panel" aria-label="Close panel">×</button></div>
+        <p class="admin-panel-copy">Only owners and admins can see this panel.</p>
+        <div class="admin-user-list" id="admin-user-list"></div>
+      </section>
 
       <section class="chat-panel">
         <header class="chat-header">
