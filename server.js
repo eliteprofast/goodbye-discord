@@ -8,6 +8,7 @@ const port = process.env.PORT || 3000;
 const publicDir = path.join(__dirname, 'public');
 const dataPath = path.join(__dirname, 'data.json');
 const clients = new Map();
+const sessions = new Map();
 const colors = ['coral', 'yellow', 'blue', 'mint'];
 
 function loadData() {
@@ -23,6 +24,12 @@ function saveData() {
 
 function makeId() {
   return crypto.randomUUID();
+}
+
+function createSession(userId) {
+  const token = crypto.randomBytes(32).toString('hex');
+  sessions.set(token, userId);
+  return token;
 }
 
 function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
@@ -125,6 +132,19 @@ webSocketServer.on('connection', (socket) => {
       return;
     }
 
+    if (payload.type === 'resume') {
+      const userId = sessions.get(String(payload.token || ''));
+      const user = data.users.find((candidate) => candidate.id === userId);
+      if (!user) {
+        send(socket, { type: 'resume-failed' });
+        return;
+      }
+      clients.set(socket, user.id);
+      send(socket, { type: 'authenticated', user: publicUser(user) });
+      sendFriends(socket, user.id);
+      return;
+    }
+
     if (payload.type === 'signup' || payload.type === 'login') {
       const username = String(payload.username || '').trim().toLowerCase();
       const password = String(payload.password || '');
@@ -147,7 +167,7 @@ webSocketServer.on('connection', (socket) => {
         saveData();
       }
       clients.set(socket, user.id);
-      send(socket, { type: 'authenticated', user: publicUser(user) });
+      send(socket, { type: 'authenticated', user: publicUser(user), token: payload.remember ? createSession(user.id) : null });
       sendFriends(socket, user.id);
       return;
     }

@@ -12,6 +12,7 @@ const authForm = document.querySelector('#auth-form');
 const authSubmit = document.querySelector('#auth-submit');
 const authSwitch = document.querySelector('#auth-switch');
 const authError = document.querySelector('#auth-error');
+const rememberMe = document.querySelector('#remember-me');
 const emptyChat = document.querySelector('#empty-chat');
 const friendSearchForm = document.querySelector('#friend-search-form');
 const friendSearchInput = document.querySelector('#friend-search-input');
@@ -23,12 +24,14 @@ const clearChatButton = document.querySelector('#clear-chat');
 
 const colors = { coral: '#f7ad99', yellow: '#f5c45c', blue: '#acd2e2', mint: '#a8d7c3' };
 let socket;
+const pendingMessages = [];
 let authMode = 'signup';
 let currentUser;
 let activeFriend;
 
 function send(payload) {
   if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify(payload));
+  else pendingMessages.push(payload);
 }
 
 function escapeHtml(value) {
@@ -98,12 +101,25 @@ function showAuthError(message) {
 function connect() {
   const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
   socket = new WebSocket(`${protocol}://${window.location.host}`);
+  socket.addEventListener('open', () => {
+    while (pendingMessages.length) socket.send(JSON.stringify(pendingMessages.shift()));
+  });
   socket.addEventListener('message', (event) => {
     const payload = JSON.parse(event.data);
-    if (payload.type === 'session' && currentUser) send({ type: 'login', username: currentUser.username, password: sessionStorage.getItem('gather-password') });
+    if (payload.type === 'session') {
+      const savedToken = localStorage.getItem('gather-session');
+      if (savedToken) send({ type: 'resume', token: savedToken });
+    }
+    if (payload.type === 'resume-failed') {
+      localStorage.removeItem('gather-session');
+      sessionStorage.removeItem('gather-user');
+      currentUser = undefined;
+      authScreen.hidden = false;
+    }
     if (payload.type === 'authenticated') {
       currentUser = payload.user;
       sessionStorage.setItem('gather-user', JSON.stringify(currentUser));
+      if (payload.token) localStorage.setItem('gather-session', payload.token);
       profileName.textContent = currentUser.username;
       profileAvatar.textContent = currentUser.username.charAt(0).toUpperCase();
       authScreen.hidden = true;
@@ -129,6 +145,7 @@ function connect() {
     if (payload.type === 'chat-cleared' && activeFriend?.id === payload.userId) clearMessages();
     if (payload.type === 'error') showAuthError(payload.message);
   });
+  socket.addEventListener('close', () => setTimeout(connect, 1500));
 }
 
 function findRequestId(userId, payload) {
@@ -140,8 +157,7 @@ authForm.addEventListener('submit', (event) => {
   authError.textContent = '';
   const username = document.querySelector('#auth-username').value.trim();
   const password = document.querySelector('#auth-password').value;
-  sessionStorage.setItem('gather-password', password);
-  send({ type: authMode, username, password });
+  send({ type: authMode, username, password, remember: rememberMe.checked });
 });
 
 authSwitch.addEventListener('click', () => {
@@ -165,6 +181,7 @@ messageForm.addEventListener('submit', (event) => {
 
 logoutButton.addEventListener('click', () => {
   sessionStorage.clear();
+  localStorage.removeItem('gather-session');
   window.location.reload();
 });
 

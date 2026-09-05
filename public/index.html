@@ -16,6 +16,7 @@
         <form id="auth-form">
           <label>Username<input id="auth-username" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_]+" autocomplete="username" placeholder="your_name" /></label>
           <label>Password<input id="auth-password" required minlength="6" type="password" autocomplete="current-password" placeholder="6+ characters" /></label>
+          <label class="remember-option"><input id="remember-me" type="checkbox" /> <span>Remember me on this device</span></label>
           <button class="auth-submit" id="auth-submit" type="submit">Create account</button>
           <button class="auth-switch" id="auth-switch" type="button">Already have an account? Log in</button>
           <p class="auth-error" id="auth-error" role="alert"></p>
