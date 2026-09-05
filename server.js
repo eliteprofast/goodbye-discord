@@ -206,6 +206,27 @@ webSocketServer.on('connection', (socket) => {
       return;
     }
 
+    if (payload.type === 'update-role') {
+      const actor = data.users.find((candidate) => candidate.id === userId);
+      const target = data.users.find((candidate) => candidate.id === payload.userId);
+      const nextRole = payload.role === 'admin' ? 'admin' : 'member';
+      if (!actor || actor.role !== 'owner' || !target || target.role === 'owner' || target.id === actor.id) {
+        send(socket, { type: 'role-denied' });
+        return;
+      }
+      target.role = nextRole;
+      saveData();
+      send(socket, { type: 'role-updated' });
+      send(socket, {
+        type: 'admin-data',
+        users: data.users.map((candidate) => ({ id: candidate.id, username: candidate.username, role: candidate.role || 'member' }))
+      });
+      for (const [otherSocket, otherUserId] of clients) {
+        if (otherUserId === target.id) send(otherSocket, { type: 'authenticated', user: publicUser(target) });
+      }
+      return;
+    }
+
     if (payload.type === 'search-users') {
       const query = String(payload.query || '').trim().toLowerCase();
       const results = data.users
