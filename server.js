@@ -195,6 +195,20 @@ webSocketServer.on('connection', (socket) => {
       return;
     }
 
+    if (payload.type === 'clear-chat') {
+      const target = data.users.find((user) => user.id === payload.userId);
+      const friendship = target && friendshipBetween(userId, target.id);
+      if (!target || !friendship || friendship.status !== 'accepted') return;
+      data.messages = data.messages.filter((message) =>
+        !((message.from === userId && message.to === target.id) || (message.from === target.id && message.to === userId))
+      );
+      saveData();
+      for (const [otherSocket, otherUserId] of clients) {
+        if (otherUserId === userId || otherUserId === target.id) send(otherSocket, { type: 'chat-cleared', userId: target.id });
+      }
+      return;
+    }
+
     if (payload.type === 'message') {
       const target = data.users.find((user) => user.id === payload.to);
       if (!target || !friendshipBetween(userId, target.id) || friendshipBetween(userId, target.id).status !== 'accepted') return;

@@ -19,6 +19,7 @@ const friendResults = document.querySelector('#friend-results');
 const incomingRequests = document.querySelector('#incoming-requests');
 const friendList = document.querySelector('#friend-list');
 const logoutButton = document.querySelector('#logout-button');
+const clearChatButton = document.querySelector('#clear-chat');
 
 const colors = { coral: '#f7ad99', yellow: '#f5c45c', blue: '#acd2e2', mint: '#a8d7c3' };
 let socket;
@@ -75,6 +76,12 @@ function renderMessages(messages) {
   messageArea.scrollTop = messageArea.scrollHeight;
 }
 
+function clearMessages() {
+  messageArea.innerHTML = '<div class="day-divider"><span>today</span></div>';
+  emptyChat.hidden = false;
+  messageArea.appendChild(emptyChat);
+}
+
 function addMessage(message) {
   const sender = message.from === currentUser.id ? currentUser : activeFriend;
   const isMine = message.from === currentUser.id;
@@ -119,6 +126,7 @@ function connect() {
       renderMessages(payload.messages);
     }
     if (payload.type === 'message' && activeFriend && (payload.message.from === activeFriend.id || payload.message.to === activeFriend.id)) addMessage(payload.message);
+    if (payload.type === 'chat-cleared' && activeFriend?.id === payload.userId) clearMessages();
     if (payload.type === 'error') showAuthError(payload.message);
   });
 }
@@ -158,6 +166,11 @@ messageForm.addEventListener('submit', (event) => {
 logoutButton.addEventListener('click', () => {
   sessionStorage.clear();
   window.location.reload();
+});
+
+clearChatButton.addEventListener('click', () => {
+  if (!activeFriend || !window.confirm(`Clear your chat with ${activeFriend.username}? This removes it for both of you.`)) return;
+  send({ type: 'clear-chat', userId: activeFriend.id });
 });
 
 const savedUser = sessionStorage.getItem('gather-user');
