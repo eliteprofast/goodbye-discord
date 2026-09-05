@@ -6,7 +6,7 @@ const { WebSocketServer } = require('ws');
 
 const port = process.env.PORT || 3000;
 const publicDir = path.join(__dirname, 'public');
-const dataPath = path.join(__dirname, 'data.json');
+const dataPath = process.env.DATA_PATH || path.join(__dirname, 'data.json');
 const clients = new Map();
 const colors = ['coral', 'yellow', 'blue', 'mint'];
 
