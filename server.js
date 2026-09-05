@@ -209,11 +209,12 @@ webSocketServer.on('connection', (socket) => {
     if (payload.type === 'update-role') {
       const actor = data.users.find((candidate) => candidate.id === userId);
       const target = data.users.find((candidate) => candidate.id === payload.userId);
-      const nextRole = payload.role === 'admin' ? 'admin' : 'member';
+      const nextRole = ['owner', 'admin'].includes(payload.role) ? payload.role : 'member';
       if (!actor || actor.role !== 'owner' || !target || target.role === 'owner' || target.id === actor.id) {
         send(socket, { type: 'role-denied' });
         return;
       }
+      if (nextRole === 'owner') actor.role = 'admin';
       target.role = nextRole;
       saveData();
       send(socket, { type: 'role-updated' });
@@ -222,7 +223,7 @@ webSocketServer.on('connection', (socket) => {
         users: data.users.map((candidate) => ({ id: candidate.id, username: candidate.username, role: candidate.role || 'member' }))
       });
       for (const [otherSocket, otherUserId] of clients) {
-        if (otherUserId === target.id) send(otherSocket, { type: 'authenticated', user: publicUser(target) });
+        if (otherUserId === target.id || otherUserId === actor.id) send(otherSocket, { type: 'authenticated', user: publicUser(otherUserId === target.id ? target : actor) });
       }
       return;
     }

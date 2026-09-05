@@ -106,7 +106,7 @@ function renderAdminData(users) {
   const canEdit = currentUser?.role === 'owner';
   adminUserList.innerHTML = users.map((user) => {
     const roleControl = canEdit && user.role !== 'owner' && user.id !== currentUser.id
-      ? `<button class="small-action" data-role-user="${user.id}" data-next-role="${user.role === 'admin' ? 'member' : 'admin'}">${user.role === 'admin' ? 'Remove admin' : 'Make admin'}</button>`
+      ? `<button class="small-action" data-role-user="${user.id}" data-next-role="${user.role === 'admin' ? 'member' : 'admin'}">${user.role === 'admin' ? 'Remove admin' : 'Make admin'}</button><button class="small-action owner-action" data-role-user="${user.id}" data-next-role="owner">Make owner</button>`
       : '';
     return `<div class="admin-user-row"><span class="mini-avatar">${user.username.charAt(0).toUpperCase()}</span><strong>${escapeHtml(user.username)}</strong><span class="admin-role">${user.role}</span>${roleControl}</div>`;
   }).join('');
