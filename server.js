@@ -8,7 +8,6 @@ const port = process.env.PORT || 3000;
 const publicDir = path.join(__dirname, 'public');
 const dataPath = path.join(__dirname, 'data.json');
 const clients = new Map();
-const sessions = new Map();
 const colors = ['coral', 'yellow', 'blue', 'mint'];
 
 function loadData() {
@@ -26,10 +25,18 @@ function makeId() {
   return crypto.randomUUID();
 }
 
-function createSession(userId) {
-  const token = crypto.randomBytes(32).toString('hex');
-  sessions.set(token, userId);
-  return token;
+function createSession(user) {
+  const signature = crypto.createHmac('sha256', user.password).update(user.id).digest('hex');
+  return `${user.id}.${signature}`;
+}
+
+function userFromSession(token) {
+  const [userId, signature] = String(token || '').split('.');
+  const user = data.users.find((candidate) => candidate.id === userId);
+  if (!user || !signature) return null;
+  const expected = crypto.createHmac('sha256', user.password).update(user.id).digest('hex');
+  if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+  return user;
 }
 
 function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
@@ -133,8 +140,7 @@ webSocketServer.on('connection', (socket) => {
     }
 
     if (payload.type === 'resume') {
-      const userId = sessions.get(String(payload.token || ''));
-      const user = data.users.find((candidate) => candidate.id === userId);
+      const user = userFromSession(payload.token);
       if (!user) {
         send(socket, { type: 'resume-failed' });
         return;
@@ -167,7 +173,7 @@ webSocketServer.on('connection', (socket) => {
         saveData();
       }
       clients.set(socket, user.id);
-      send(socket, { type: 'authenticated', user: publicUser(user), token: payload.remember ? createSession(user.id) : null });
+      send(socket, { type: 'authenticated', user: publicUser(user), token: payload.remember ? createSession(user) : null });
       sendFriends(socket, user.id);
       return;
     }

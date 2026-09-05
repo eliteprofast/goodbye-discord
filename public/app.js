@@ -120,6 +120,7 @@ function connect() {
       currentUser = payload.user;
       sessionStorage.setItem('gather-user', JSON.stringify(currentUser));
       if (payload.token) localStorage.setItem('gather-session', payload.token);
+      else localStorage.removeItem('gather-session');
       profileName.textContent = currentUser.username;
       profileAvatar.textContent = currentUser.username.charAt(0).toUpperCase();
       authScreen.hidden = true;
